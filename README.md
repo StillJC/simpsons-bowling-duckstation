@@ -49,6 +49,12 @@ The following ROM files are required and must be configured in **Settings → BI
 
 All files can be extracted from `Bowlingunlocked.apk` (`res/raw/` for ROM files).
 
+> **Loading the game:** once the BIOS / EEPROM / Flash paths are set under
+> **Settings → BIOS → Konami GV System**, load the disc as you would any other game in
+> DuckStation — add its directory via `Settings → Add Game Directory` (or open the image
+> directly) and launch it from the game list. **Use the `.iso` disc image — the `.chd` will
+> not work.**
+
 ### Building
 
 > ⚠️ This is a years-old (Qt 5–era) DuckStation tree. Expect to supply period-appropriate
