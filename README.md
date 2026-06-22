@@ -24,9 +24,9 @@ A "BIOS" ROM image is required to to start the emulator and to play games. You c
 > not this fork. This fork ships no prebuilt binaries, has no separate Discord, and is not supported
 > by the upstream developer — please don't direct Simpsons Bowling questions to them.
 
-This is a fork of [Arcade1Up/duckstation-sb](https://github.com/Arcade1Up/duckstation-sb), itself a fork of [stenzek/duckstation](https://github.com/stenzek/duckstation), modified to run **The Simpsons Bowling** on macOS via the Qt desktop frontend. The game originally ran on Konami GV System hardware (a PS1-derived arcade board) inside an Arcade1Up cabinet running Android.
+This is a fork of [Arcade1Up/duckstation-sb](https://github.com/Arcade1Up/duckstation-sb), itself a fork of [stenzek/duckstation](https://github.com/stenzek/duckstation), modified to run **The Simpsons Bowling** on macOS via the Qt desktop frontend. The game originally ran on Konami GV System hardware (a PS1-derived arcade board).
 
-This fork extends the original Android port with:
+This fork extends the original Arcade1Up Android port with:
 - macOS Qt frontend support (replaces Android-only frontend)
 - Configurable file paths for EEPROM, Flash ROMs, and BIOS via the Settings UI
 - Mouse/trackball input for the Konami GV trackball hardware (configurable sensitivity)
@@ -44,10 +44,8 @@ The following ROM files are required and must be configured in **Settings → BI
 
 - **BIOS** (`999a01.7e`, 512KB) — place in DuckStation's BIOS directory
 - **EEPROM** (128 bytes) — set path in Konami GV settings
-- **Flash 0–3** (2MB each) — set paths in Konami GV settings
+- **Flash 0, 1, and 3** (2MB each) — set paths in Konami GV settings
 - **Disc image** (ISO) — add to game list normally
-
-All files can be extracted from `Bowlingunlocked.apk` (`res/raw/` for ROM files).
 
 > **Loading the game:** once the BIOS / EEPROM / Flash paths are set under
 > **Settings → BIOS → Konami GV System**, load the disc as you would any other game in
