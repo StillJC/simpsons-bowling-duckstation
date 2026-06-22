@@ -27,6 +27,12 @@ This fork extends the original Android port with:
 - Mouse/trackball input for the Konami GV trackball hardware (configurable sensitivity)
 - All Konami GV hardware emulation from the original fork: EXP1 bus, SCSI CD reads, Flash ROM, EEPROM, trackball, and player buttons
 
+> **Codebase status:** This fork is based on a DuckStation snapshot from several years ago
+> (the Qt 5 era, ~2021). It is **not compatible with DuckStation's modern architecture** as of
+> this publishing, and is not intended to be rebased onto current upstream. It is preserved here
+> as a working record of the Simpsons Bowling port — modernizing it onto today's DuckStation is
+> a task I leave to another dedicated Simpsons fan.
+
 ### Required files
 
 The following ROM files are required and must be configured in **Settings → BIOS → Konami GV System**:
@@ -40,12 +46,30 @@ All files can be extracted from `Bowlingunlocked.apk` (`res/raw/` for ROM files)
 
 ### Building
 
-Requires Qt 5, SDL2, and the [duckstation/dependencies](https://github.com/duckstation/dependencies) prebuilt deps.
+> ⚠️ This is a years-old (Qt 5–era) DuckStation tree. Expect to supply period-appropriate
+> dependencies and toolchains, and to debug build issues yourself — see **Codebase status** above.
+
+**Common prerequisites:** CMake 3.x, a C++17 compiler, Qt 5, and SDL2.
+
+**Prebuilt dependencies (NOT included in this repo):** the build expects the prebuilt dependency
+bundle from [duckstation/dependencies](https://github.com/duckstation/dependencies) unpacked into
+`dep/prebuilt/<platform>/`. These large binary deps are intentionally not committed here. In
+particular the macOS build hard-references `dep/prebuilt/macos-universal/lib/libMoltenVK.dylib`
+(see `src/duckstation-qt/CMakeLists.txt`), so a clean clone will not configure on macOS until that
+directory is populated with an era-appropriate (Qt 5) bundle.
+
+**macOS / Linux** (CMake + Qt 5):
 
 ```bash
+# 1. Populate dep/prebuilt/<platform>/ from duckstation/dependencies (see above)
+# 2. Configure + build (on Linux, point Qt5_DIR at your distro's Qt 5 cmake dir, or use system Qt 5)
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=$(brew --prefix qt@5)/lib/cmake/Qt5
 cmake --build build --parallel
 ```
+
+**Windows** (Visual Studio / MSVC): open `duckstation.sln` and build the desired configuration.
+The vendored `dep/msvc` libraries are included; the remaining prebuilt Windows dependencies come
+from the dependencies bundle above.
 
 ### Controls
 
@@ -101,7 +125,7 @@ Other features include:
  - Post processing shader chains
  - "Fast boot" for skipping BIOS splash/intro
  - Save state support
- - Windows, Linux, **highly experimental** macOS support
+ - Windows, Linux, and macOS support
  - Supports bin/cue images, raw bin/img files, MAME CHD, single-track ECM, MDS/MDF, and unencrypted PBP formats.
  - Direct booting of homebrew executables
  - Direct loading of Portable Sound Format (psf) files
@@ -182,11 +206,11 @@ To download:
 
 ### macOS
 
-MacOS builds are no longer provided, as I cannot support a platform which I do not own hardware for, and I'm not spending $1000+ out of my own pocket for a machine which I have no other use for.
-
-You can still build from [source](#building), but you will have to debug any issues encountered yourself.
-
-If anyone is willing to volunteer to support the platform to ensure users have a good experience, I'm more than happy to re-enable the releases.
+macOS is the primary target of this fork — *The Simpsons Bowling* runs via the Qt desktop
+frontend. No prebuilt macOS binaries are distributed; build from [source](#building) using Qt 5
+and the prebuilt dependency bundle (which provides `libMoltenVK.dylib`). Because this is a
+years-old DuckStation tree, expect to debug build issues yourself — see **Codebase status** near
+the top of this README.
 
 ### Android
 
