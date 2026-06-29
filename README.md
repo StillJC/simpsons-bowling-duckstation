@@ -48,7 +48,6 @@ Major changes and updates made in this fork:
 
 * Added native bezel overlay support
 * Added right-click Qt menu option to set a game bezel image
-* Added bezel settings support in core/frontend configuration
 * Added fullscreen launch support for cabinet use
 * Added project-specific Simpsons Bowling folder layout
 * Added support for booting `arcade.iso` from the local `simpsons` subfolder
@@ -71,7 +70,7 @@ Arcade1Up_1.43.apk
 From that original APK/game dump, the required files are:
 
 999a01.7e       PlayStation/Konami GV BIOS, 512 KB
-EEPROM file     128 bytes
+eeprom          128 bytes
 flash0          2 MB
 flash1          2 MB
 flash2          2 MB
@@ -96,7 +95,7 @@ The game must be run from the ISO image:
 
 simpsons/arcade.iso
 
-MAME romset files are untested with this fork.
+## MAME romset files are untested with this fork.
 
 These files must come from your own legally obtained original source. They are not included in this repository and will not be committed to GitHub.
 
