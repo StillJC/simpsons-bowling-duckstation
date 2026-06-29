@@ -137,6 +137,9 @@ struct Settings
   s8 display_line_start_offset = 0;
   s8 display_line_end_offset = 0;
   bool display_force_4_3_for_24bit = false;
+  bool display_bezel_enabled = false;
+  std::string display_bezel_path;
+  float display_bezel_opacity = 1.0f;
   bool gpu_24bit_chroma_smoothing = false;
   bool display_linear_filtering = true;
   bool display_integer_scaling = false;

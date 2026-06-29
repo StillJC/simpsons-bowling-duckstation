@@ -776,6 +776,9 @@ void MainWindow::onGameListContextMenuRequested(const QPoint& point, const GameL
     connect(menu.addAction(tr("Set Cover Image...")), &QAction::triggered,
             [this, entry]() { onGameListSetCoverImageRequested(entry); });
 
+    connect(menu.addAction(tr("Set Bezel Image...")), &QAction::triggered,
+            [this, entry]() { onGameListSetBezelImageRequested(entry); });
+
     menu.addSeparator();
 
     if (!m_emulation_running)
@@ -864,7 +867,25 @@ void MainWindow::onGameListSetCoverImageRequested(const GameListEntry* entry)
     return;
   }
 
-  m_game_list_widget->refreshGridCovers();
+    m_game_list_widget->refreshGridCovers();
+}
+
+void MainWindow::onGameListSetBezelImageRequested(const GameListEntry* entry)
+{
+  (void)entry;
+
+  const QString filename =
+    QFileDialog::getOpenFileName(this, tr("Select Bezel Image"), QString(), tr("PNG Images (*.png)"));
+
+  if (filename.isEmpty())
+    return;
+
+  m_host_interface->SetBoolSettingValue("Display", "BezelEnabled", true);
+  m_host_interface->SetStringSettingValue("Display", "BezelPath", filename.toUtf8().constData());
+  m_host_interface->SetFloatSettingValue("Display", "BezelOpacity", 1.0f);
+  m_host_interface->applySettings();
+
+  reportMessage(tr("Bezel image set to '%1'.").arg(filename));
 }
 
 void MainWindow::setupAdditionalUi()

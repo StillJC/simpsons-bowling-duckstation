@@ -225,6 +225,9 @@ void Settings::Load(SettingsInterface& si)
   display_aspect_ratio_custom_denominator = static_cast<u16>(
     std::clamp<int>(si.GetIntValue("Display", "CustomAspectRatioDenominator", 3), 1, std::numeric_limits<u16>::max()));
   display_force_4_3_for_24bit = si.GetBoolValue("Display", "Force4_3For24Bit", false);
+  display_bezel_enabled = si.GetBoolValue("Display", "BezelEnabled", false);
+  display_bezel_path = si.GetStringValue("Display", "BezelPath", "");
+  display_bezel_opacity = std::clamp(si.GetFloatValue("Display", "BezelOpacity", 1.0f), 0.0f, 1.0f);
   display_active_start_offset = static_cast<s16>(si.GetIntValue("Display", "ActiveStartOffset", 0));
   display_active_end_offset = static_cast<s16>(si.GetIntValue("Display", "ActiveEndOffset", 0));
   display_line_start_offset = static_cast<s8>(si.GetIntValue("Display", "LineStartOffset", 0));
@@ -403,6 +406,14 @@ void Settings::Save(SettingsInterface& si) const
   si.SetIntValue("Display", "LineStartOffset", display_line_start_offset);
   si.SetIntValue("Display", "LineEndOffset", display_line_end_offset);
   si.SetBoolValue("Display", "Force4_3For24Bit", display_force_4_3_for_24bit);
+  si.SetBoolValue("Display", "BezelEnabled", display_bezel_enabled);
+
+  if (display_bezel_path.empty())
+    si.DeleteValue("Display", "BezelPath");
+  else
+    si.SetStringValue("Display", "BezelPath", display_bezel_path.c_str());
+
+  si.SetFloatValue("Display", "BezelOpacity", display_bezel_opacity);
   si.SetStringValue("Display", "AspectRatio", GetDisplayAspectRatioName(display_aspect_ratio));
   si.SetIntValue("Display", "CustomAspectRatioNumerator", display_aspect_ratio_custom_numerator);
   si.GetIntValue("Display", "CustomAspectRatioDenominator", display_aspect_ratio_custom_denominator);

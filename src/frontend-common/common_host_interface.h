@@ -342,6 +342,10 @@ public:
   void DrawOSDMessages();
   void DrawDebugWindows();
 
+  void DrawBezelOverlay();
+  void ReloadBezelOverlayTexture();
+  void ReleaseBezelOverlayTexture();
+
   /// Returns true if features such as save states should be disabled.
   bool IsCheevosChallengeModeActive() const;
 
