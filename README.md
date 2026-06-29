@@ -74,11 +74,11 @@ From that original APK/game dump, the required files are:
 | File | Description |
 |---|---|
 | `999a01.7e` | PlayStation/Konami GV BIOS, 512 KB |
-| `eeprom.bin` | EEPROM data, 128 bytes |
-| `flash0.bin` | Flash ROM 0, 2 MB |
-| `flash1.bin` | Flash ROM 1, 2 MB |
-| `flash2.bin` | Flash ROM 2, 2 MB, if present in your dump |
-| `flash3.bin` | Flash ROM 3, 2 MB |
+| `eeprom` | EEPROM data, 128 bytes |
+| `flash0` | Flash ROM 0, 2 MB |
+| `flash1` | Flash ROM 1, 2 MB |
+| `flash2` | Flash ROM 2, 2 MB, if present in your dump |
+| `flash3` | Flash ROM 3, 2 MB |
 | `arcade.iso` | Simpsons Bowling disc image |
 
 Recommended folder layout:
@@ -91,11 +91,11 @@ DuckStation Folder/
 │  └─ 999a01.7e
 └─ simpsons/
    ├─ arcade.iso
-   ├─ eeprom.bin
-   ├─ flash0.bin
-   ├─ flash1.bin
-   ├─ flash2.bin
-   └─ flash3.bin
+   ├─ eeprom
+   ├─ flash0
+   ├─ flash1
+   ├─ flash2
+   └─ flash3
 ```
 
 The game must be run from the ISO image:
