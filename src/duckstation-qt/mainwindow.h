@@ -106,7 +106,7 @@ private Q_SLOTS:
   void onGameListEntryDoubleClicked(const GameListEntry* entry);
   void onGameListContextMenuRequested(const QPoint& point, const GameListEntry* entry);
   void onGameListSetCoverImageRequested(const GameListEntry* entry);
-
+  void onGameListSetBezelImageRequested(const GameListEntry* entry);
   void onUpdateCheckComplete();
 
   void openCPUDebugger();

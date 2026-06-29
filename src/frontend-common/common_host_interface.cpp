@@ -5,6 +5,7 @@
 #include "common/byte_stream.h"
 #include "common/crash_handler.h"
 #include "common/file_system.h"
+#include "common/image.h"
 #include "common/log.h"
 #include "common/string_util.h"
 #include "controller_interface.h"
@@ -38,6 +39,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <algorithm>
 
 #ifndef _UWP
 #include "cubeb_audio_stream.h"
@@ -73,10 +75,80 @@ std::unique_ptr<AudioStream> CreateXAudio2AudioStream();
 
 Log_SetChannel(CommonHostInterface);
 
+struct BezelOverlayState
+{
+  std::string path;
+  std::unique_ptr<HostDisplayTexture> texture;
+};
+
+static BezelOverlayState s_bezel_overlay;
+
 static std::string s_settings_filename;
 static std::unique_ptr<FrontendCommon::InputOverlayUI> s_input_overlay_ui;
 
 CommonHostInterface::CommonHostInterface() = default;
+
+void CommonHostInterface::ReleaseBezelOverlayTexture()
+{
+  s_bezel_overlay.texture.reset();
+  s_bezel_overlay.path.clear();
+}
+
+void CommonHostInterface::ReloadBezelOverlayTexture()
+{
+  if (!m_display || !g_settings.display_bezel_enabled || g_settings.display_bezel_path.empty())
+  {
+    ReleaseBezelOverlayTexture();
+    return;
+  }
+
+  if (s_bezel_overlay.texture && s_bezel_overlay.path == g_settings.display_bezel_path)
+    return;
+
+  Common::RGBA8Image image;
+  if (!Common::LoadImageFromFile(&image, g_settings.display_bezel_path.c_str()) || !image.IsValid())
+  {
+    Log_ErrorPrintf("Failed to load bezel image '%s'", g_settings.display_bezel_path.c_str());
+    ReleaseBezelOverlayTexture();
+    return;
+  }
+
+  std::unique_ptr<HostDisplayTexture> texture =
+    m_display->CreateTexture(image.GetWidth(), image.GetHeight(), 1, 1, 1, HostDisplayPixelFormat::RGBA8,
+                             image.GetPixels(), image.GetByteStride(), false);
+
+  if (!texture)
+  {
+    Log_ErrorPrintf("Failed to create bezel texture '%s'", g_settings.display_bezel_path.c_str());
+    ReleaseBezelOverlayTexture();
+    return;
+  }
+
+  s_bezel_overlay.path = g_settings.display_bezel_path;
+  s_bezel_overlay.texture = std::move(texture);
+
+  Log_InfoPrintf("Loaded native bezel '%s'", s_bezel_overlay.path.c_str());
+}
+
+void CommonHostInterface::DrawBezelOverlay()
+{
+  if (!System::IsValid() || !g_settings.display_bezel_enabled || g_settings.display_bezel_path.empty())
+    return;
+
+  if (!s_bezel_overlay.texture || s_bezel_overlay.path != g_settings.display_bezel_path)
+    ReloadBezelOverlayTexture();
+
+  if (!s_bezel_overlay.texture)
+    return;
+
+  const ImVec2 display_size = ImGui::GetIO().DisplaySize;
+  const float alpha = std::clamp(g_settings.display_bezel_opacity, 0.0f, 1.0f);
+  const ImU32 tint = IM_COL32(255, 255, 255, static_cast<int>(alpha * 255.0f));
+
+  ImGui::GetBackgroundDrawList()->AddImage(static_cast<ImTextureID>(s_bezel_overlay.texture->GetHandle()),
+                                           ImVec2(0.0f, 0.0f), display_size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
+                                           tint);
+}
 
 CommonHostInterface::~CommonHostInterface() = default;
 
@@ -618,11 +690,15 @@ bool CommonHostInterface::CreateHostDisplayResources()
   if (!m_logo_texture)
     m_logo_texture = FullscreenUI::LoadTextureResource("duck.png", true);
 
+  ReloadBezelOverlayTexture();
+
   return true;
 }
 
 void CommonHostInterface::ReleaseHostDisplayResources()
 {
+  ReleaseBezelOverlayTexture();
+
   if (m_fullscreen_ui_enabled)
     FullscreenUI::Shutdown();
 
@@ -1176,6 +1252,8 @@ void CommonHostInterface::DrawImGuiWindows()
   const bool system_valid = System::IsValid();
   if (system_valid)
   {
+    DrawBezelOverlay();
+
     if (m_save_state_selector_ui->IsOpen())
       m_save_state_selector_ui->Draw();
 
@@ -3334,17 +3412,18 @@ void CommonHostInterface::SetDefaultSettings()
   CheckForSettingsChanges(old_settings);
 }
 
-void CommonHostInterface::UpdateInputMap()
-{
-  std::lock_guard<std::recursive_mutex> lock(m_settings_mutex);
-  UpdateInputMap(*m_settings_interface.get());
-}
-
 void CommonHostInterface::CheckForSettingsChanges(const Settings& old_settings)
 {
   HostInterface::CheckForSettingsChanges(old_settings);
 
   UpdateControllerInterface();
+
+  if (g_settings.display_bezel_enabled != old_settings.display_bezel_enabled ||
+      g_settings.display_bezel_path != old_settings.display_bezel_path ||
+      g_settings.display_bezel_opacity != old_settings.display_bezel_opacity)
+  {
+    ReloadBezelOverlayTexture();
+  }
 
   if (System::IsValid())
   {
