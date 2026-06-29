@@ -97,7 +97,8 @@ simpsons/arcade.iso
 
 ## MAME romset files are untested with this fork.
 
-These files must come from your own legally obtained original Arcade1Up APK source. They are not included in this repository and will not be committed to GitHub.
+These files must come from your own legally obtained original Arcade1Up APK source. They are not included in this repository and will not be 
+committed to GitHub.
 
 ## Running the Game
 
