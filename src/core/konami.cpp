@@ -327,10 +327,10 @@ void KonamiP1Read(u32 Size, u32 Offset, u32& Value)
   if (CurrentButtons & 0x0020) Value &= ~(1 << 1); // RIGHT
   if (CurrentButtons & 0x0010) Value &= ~(1 << 2); // UP
   if (CurrentButtons & 0x0040) Value &= ~(1 << 3); // DOWN
-  if (CurrentButtons & 0x4000) Value &= ~(1 << 4); // BUTTON 1 PLAYER 1
-  if (CurrentButtons & 0x2000) Value &= ~(1 << 4); // BUTTON 1 PLAYER 1
-  if (CurrentButtons & 0x0D08) Value &= ~(1 << 9);  // START
-  if (CurrentButtons & 0x0001) Value &= ~(1 << 10); // COIN
+  if (CurrentButtons & 0x4000) Value &= ~(1 << 4); // BUTTON 1 / CROSS
+  if (CurrentButtons & 0x2000) Value &= ~(1 << 5); // BUTTON 2 / CIRCLE
+  if (CurrentButtons & 0x0008) Value &= ~(1 << 9); // START
+  if (CurrentButtons & 0x0001) Value &= ~(1 << 10); // COIN 1
   if (CurrentButtons & 0x0002) Value &= ~(1 << 11); // SERVICE / L3
   if (CurrentButtons & 0x0004) Value &= ~(1 << 12); // TEST / R3
 }
@@ -345,6 +345,8 @@ void KonamiP1Write(u32 Size, u32 Offset, u32 Value)
 void KonamiP2Read(u32 Size, u32 Offset, u32& Value)
 {
   Value = 0xFFFFFFFF;
+
+  if (CurrentButtons & 0x0100) Value &= ~(1 << 10); // COIN MECH 2 / L2
 }
 
 void KonamiP2Write(u32 Size, u32 Offset, u32 Value)
