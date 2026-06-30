@@ -31,8 +31,18 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install aqtinstall
           python -m aqt install-qt windows desktop $env:QT_VERSION $env:QT_ARCH -O C:\Qt
-          echo "Qt6_DIR=C:\Qt\$env:QT_VERSION\$env:QT_ARCH" >> $env:GITHUB_ENV
-          echo "C:\Qt\$env:QT_VERSION\$env:QT_ARCH\bin" >> $env:GITHUB_PATH
+
+          $qtPath = "C:\Qt\$env:QT_VERSION\$env:QT_ARCH"
+
+          if (-not (Test-Path $qtPath)) {
+            throw "Qt install path not found: $qtPath"
+          }
+
+          echo "QTDIR=$qtPath" >> $env:GITHUB_ENV
+          echo "Qt6_DIR=$qtPath" >> $env:GITHUB_ENV
+          echo "$qtPath\bin" >> $env:GITHUB_PATH
+
+          Write-Host "QTDIR set to $qtPath"
 
       - name: Find MSBuild
         shell: pwsh
@@ -66,7 +76,8 @@ jobs:
             /m `
             /p:Configuration=$env:BUILD_CONFIGURATION `
             /p:Platform=$env:BUILD_PLATFORM `
-            /p:PreferredToolArchitecture=x64
+            /p:PreferredToolArchitecture=x64 `
+            /p:QTDIR="$env:QTDIR"
 
       - name: Package build
         shell: pwsh
@@ -78,11 +89,11 @@ jobs:
           New-Item -ItemType Directory -Path $packageRoot | Out-Null
           New-Item -ItemType Directory -Path $dist | Out-Null
 
-          # Prefer normal DuckStation bin output folder.
           if (Test-Path "bin\x64") {
             Copy-Item "bin\x64\*" $packageRoot -Recurse -Force
           } else {
             $qtExe = Get-ChildItem -Recurse -Filter "duckstation-qt-x64-Release.exe" | Select-Object -First 1
+
             if (-not $qtExe) {
               throw "Could not find duckstation-qt-x64-Release.exe"
             }
@@ -93,7 +104,7 @@ jobs:
           # Do not ship game/media/legal-sensitive files.
           Get-ChildItem $packageRoot -Recurse -Include *.iso,*.chd,*.cue,*.bin,*.apk,*.rom,*.key -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 
-          # Create expected empty folders.
+          # Create expected empty user folders.
           New-Item -ItemType Directory -Path "$packageRoot\simpsons" -Force | Out-Null
           New-Item -ItemType Directory -Path "$packageRoot\bios" -Force | Out-Null
           New-Item -ItemType Directory -Path "$packageRoot\bezel" -Force | Out-Null
