@@ -26,7 +26,10 @@ void KonamiTrackballRead(u32 Size, u32 Offset, u32& Value);
 void KonamiTrackballWrite(u32 Size, u32 Offset, u32 Value);
 
 void KonamiButtonsSet(u32 Buttons);
+
 void KonamiTrackballSetXY(u16 X, u16 Y);
+void KonamiTrackballAddDelta(s32 X, s32 Y);
+void KonamiTrackballReset();
 
 void KonamiScsiIrqDeassert(void);
 void KonamiEepromFixup(void);

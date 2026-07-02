@@ -121,5 +121,6 @@
     <ClInclude Include="multitap.h" />
     <ClInclude Include="gpu_hw_d3d12.h" />
     <ClInclude Include="gdb_protocol.h" />
+    <ClInclude Include="konami.h" />
   </ItemGroup>
 </Project>

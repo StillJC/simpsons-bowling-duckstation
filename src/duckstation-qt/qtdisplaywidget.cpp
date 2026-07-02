@@ -97,13 +97,19 @@ void QtDisplayWidget::setRelativeMode(bool enabled)
   if (m_relative_mouse_enabled == enabled)
     return;
 
+  m_has_last_mouse_global_position = false;
+
   if (enabled)
   {
     m_relative_mouse_start_position = QCursor::pos();
 
     const QPoint center_pos = mapToGlobal(QPoint(width() / 2, height() / 2));
     QCursor::setPos(center_pos);
+
     m_relative_mouse_last_position = center_pos;
+    m_last_mouse_global_position = center_pos;
+    m_has_last_mouse_global_position = true;
+
     grabMouse();
   }
   else
@@ -145,10 +151,24 @@ bool QtDisplayWidget::event(QEvent* event)
       {
         const qreal dpr = devicePixelRatioFromScreen();
         const QPoint mouse_pos = mouse_event->pos();
+        const QPoint global_pos = mapToGlobal(mouse_pos);
+
         const int scaled_x = static_cast<int>(static_cast<qreal>(mouse_pos.x()) * dpr);
         const int scaled_y = static_cast<int>(static_cast<qreal>(mouse_pos.y()) * dpr);
 
         windowMouseMoveEvent(scaled_x, scaled_y);
+
+        if (m_has_last_mouse_global_position)
+        {
+          const int dx = global_pos.x() - m_last_mouse_global_position.x();
+          const int dy = global_pos.y() - m_last_mouse_global_position.y();
+
+          if (dx != 0 || dy != 0)
+            emit windowMouseRelativeEvent(dx, dy);
+        }
+
+        m_last_mouse_global_position = global_pos;
+        m_has_last_mouse_global_position = true;
       }
       else
       {
@@ -157,21 +177,30 @@ bool QtDisplayWidget::event(QEvent* event)
 
         const int dx = mouse_pos.x() - center_pos.x();
         const int dy = mouse_pos.y() - center_pos.y();
+
+        if (dx != 0 || dy != 0)
+          emit windowMouseRelativeEvent(dx, dy);
+
         m_relative_mouse_last_position.setX(m_relative_mouse_last_position.x() + dx);
         m_relative_mouse_last_position.setY(m_relative_mouse_last_position.y() + dy);
+
         windowMouseMoveEvent(m_relative_mouse_last_position.x(), m_relative_mouse_last_position.y());
+
         QCursor::setPos(center_pos);
 
+        m_last_mouse_global_position = center_pos;
+        m_has_last_mouse_global_position = true;
+
 #if 0
-        qCritical() << "center" << center_pos.x() << "," << center_pos.y();
-        qCritical() << "mouse" << mouse_pos.x() << "," << mouse_pos.y();
-        qCritical() << "dxdy" << dx << "," << dy;
+    qCritical() << "center" << center_pos.x() << "," << center_pos.y();
+    qCritical() << "mouse" << mouse_pos.x() << "," << mouse_pos.y();
+    qCritical() << "dxdy" << dx << "," << dy;
 #endif
       }
 
       return true;
     }
-
+        
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseButtonRelease:

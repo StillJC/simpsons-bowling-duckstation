@@ -30,6 +30,7 @@ Q_SIGNALS:
   void windowClosedEvent();
   void windowKeyEvent(int key_code, int mods, bool pressed);
   void windowMouseMoveEvent(int x, int y);
+  void windowMouseRelativeEvent(int dx, int dy);
   void windowMouseButtonEvent(int button, bool pressed);
   void windowMouseWheelEvent(const QPoint& angle_delta);
 
@@ -39,6 +40,8 @@ protected:
 private:
   QPoint m_relative_mouse_start_position{};
   QPoint m_relative_mouse_last_position{};
+  QPoint m_last_mouse_global_position{};
+  bool m_has_last_mouse_global_position = false;
   bool m_relative_mouse_enabled = false;
 };
 

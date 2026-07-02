@@ -118,6 +118,7 @@
     <ClInclude Include="host_interface.h" />
     <ClInclude Include="host_interface_progress_callback.h" />
     <ClInclude Include="interrupt_controller.h" />
+    <ClInclude Include="konami.h" />
     <ClInclude Include="libcrypt_game_codes.h" />
     <ClInclude Include="mdec.h" />
     <ClInclude Include="memory_card.h" />

@@ -8,6 +8,7 @@
 #include "core/cheats.h"
 #include "core/controller.h"
 #include "core/gpu.h"
+#include "core/konami.h"
 #include "core/memory_card.h"
 #include "core/system.h"
 #include "frontend-common/fullscreen_ui.h"
@@ -656,6 +657,12 @@ void QtHostInterface::connectDisplaySignals(QtDisplayWidget* widget)
           Qt::BlockingQueuedConnection);
   connect(widget, &QtDisplayWidget::windowKeyEvent, this, &QtHostInterface::onDisplayWindowKeyEvent);
   connect(widget, &QtDisplayWidget::windowMouseMoveEvent, this, &QtHostInterface::onDisplayWindowMouseMoveEvent);
+
+  connect(widget, &QtDisplayWidget::windowMouseRelativeEvent, this, [](int dx, int dy) {
+    if (System::IsValid())
+      KonamiTrackballAddDelta(static_cast<s32>(dx), static_cast<s32>(dy));
+  });
+
   connect(widget, &QtDisplayWidget::windowMouseButtonEvent, this, &QtHostInterface::onDisplayWindowMouseButtonEvent);
   connect(widget, &QtDisplayWidget::windowMouseWheelEvent, this, &QtHostInterface::onDisplayWindowMouseWheelEvent);
 }

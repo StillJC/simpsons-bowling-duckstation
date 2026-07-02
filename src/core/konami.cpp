@@ -10,7 +10,9 @@
 #include "timers.h"
 #include "timing_event.h"
 #include <algorithm>
+#include <cmath>
 #include <limits>
+#include <mutex>
 #include <stdio.h>
 
 Log_SetChannel(Konami);
@@ -56,11 +58,20 @@ static std::FILE* EepromFp;
 static uint16_t Eeprom[64];
 
 // Trackball
-static s32 TrackballMouseX;
-static s32 TrackballMouseY;
+static std::mutex TrackballMutex;
+
+// Pending relative movement from the real mouse / USB trackball.
+// These are not screen cursor coordinates.
+static double TrackballPendingX;
+static double TrackballPendingY;
+
+// Latched 12-bit values exposed to the Konami GV input registers.
 static u16 TrackballX;
 static u16 TrackballY;
+
 static float TrackballSensitivity = 1.0f;
+
+void KonamiTrackballReset();
 
 // Score table
 static struct {
@@ -127,8 +138,7 @@ void KonamiInit(void)
 
   ScsiCd = FileSystem::OpenCFile(System::GetRunningPath().c_str(), "rb");
 
-  TrackballMouseX = g_host_interface->GetDisplay()->GetMousePositionX();
-  TrackballMouseY = g_host_interface->GetDisplay()->GetMousePositionY();
+  KonamiTrackballReset();
   TrackballSensitivity = g_host_interface->GetFloatSettingValue("KonamiGV", "TrackballSensitivity", 1.0f);
 }
 
@@ -432,40 +442,55 @@ void KonamiEepromWrite(u32 Size, u32 Offset, u32 Value)
   }
 }
 
+static s32 KonamiConsumeTrackballAxis(double& pending)
+{
+  const s32 whole = std::clamp(static_cast<s32>(std::trunc(pending)), -2048, 2047);
+  pending -= static_cast<double>(whole);
+  return whole;
+}
+
+static u16 KonamiEncodeTrackball12(s32 value)
+{
+  return static_cast<u16>(value) & 0x0FFF;
+}
+
+static void KonamiLatchTrackball()
+{
+  std::lock_guard<std::mutex> lock(TrackballMutex);
+
+  const s32 x = KonamiConsumeTrackballAxis(TrackballPendingX);
+  const s32 y = KonamiConsumeTrackballAxis(TrackballPendingY);
+
+  TrackballX = KonamiEncodeTrackball12(x);
+  TrackballY = KonamiEncodeTrackball12(y);
+}
+
 // Trackball
 void KonamiTrackballRead(u32 Size, u32 Offset, u32& Value)
 {
   if (Offset == 0x006800C0)
-  {
-    // Sample mouse delta on first register read each cycle
-    const HostDisplay* display = g_host_interface->GetDisplay();
-    const s32 mx = display->GetMousePositionX();
-    const s32 my = display->GetMousePositionY();
-    const s32 dx = mx - TrackballMouseX;
-    const s32 dy = my - TrackballMouseY;
-    TrackballMouseX = mx;
-    TrackballMouseY = my;
-    TrackballX = static_cast<u16>(std::clamp(static_cast<s32>(-dx * TrackballSensitivity), -2048, 2047));
-    TrackballY = static_cast<u16>(std::clamp(static_cast<s32>(dy * TrackballSensitivity), -2048, 2047));
-  }
+    KonamiLatchTrackball();
 
   switch (Offset)
   {
     case 0x006800C0:
       Value = (TrackballX & 0x0FF) << 8;
       break;
+
     case 0x006800C2:
       Value = (TrackballX & 0xF00);
       break;
+
     case 0x006800C4:
       Value = (TrackballY & 0x0FF) << 8;
       break;
+
     case 0x006800C6:
       Value = (TrackballY & 0xF00);
       break;
+
     default:
-      TrackballX = 0;
-      TrackballY = 0;
+      Value = 0;
       break;
   }
 }
@@ -482,8 +507,30 @@ void KonamiButtonsSet(u32 Buttons)
 
 void KonamiTrackballSetXY(u16 X, u16 Y)
 {
-  TrackballX = X;
-  TrackballY = Y;
+  std::lock_guard<std::mutex> lock(TrackballMutex);
+
+  TrackballX = X & 0x0FFF;
+  TrackballY = Y & 0x0FFF;
+}
+
+void KonamiTrackballAddDelta(s32 X, s32 Y)
+{
+  std::lock_guard<std::mutex> lock(TrackballMutex);
+
+  // Match the old direction behavior:
+  // old code used -dx for X and +dy for Y.
+  TrackballPendingX += static_cast<double>(-X) * static_cast<double>(TrackballSensitivity);
+  TrackballPendingY += static_cast<double>(Y) * static_cast<double>(TrackballSensitivity);
+}
+
+void KonamiTrackballReset()
+{
+  std::lock_guard<std::mutex> lock(TrackballMutex);
+
+  TrackballPendingX = 0.0;
+  TrackballPendingY = 0.0;
+  TrackballX = 0;
+  TrackballY = 0;
 }
 
 // Misc
